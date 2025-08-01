@@ -1,0 +1,53 @@
+{
+  "name": "solid-tiny-query",
+  "version": "0.1.0",
+  "description": "",
+  "main": "./dist/index.js",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "vite",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "lint": "npx ultracite lint",
+    "lint:fix": "npx ultracite format",
+    "release": "commit-and-tag-version -i CHANGELOG.md --same-file",
+    "pub": "git push --follow-tags && pnpm build && pnpm publish",
+    "prepare": "husky"
+  },
+  "peerDependencies": {
+    "solid-js": "^1.9.7"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.1.2",
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
+    "@solidjs/router": "^0.15.3",
+    "@solidjs/testing-library": "^0.8.10",
+    "@vitest/ui": "^3.2.4",
+    "commit-and-tag-version": "^12.5.1",
+    "husky": "^9.1.7",
+    "jsdom": "^26.1.0",
+    "tsup": "^8.5.0",
+    "typescript": "^5.8.3",
+    "ultracite": "5.1.2",
+    "unocss": "^66.3.3",
+    "vite": "^6.2.1",
+    "vite-plugin-solid": "^2.11.0",
+    "vite-plugin-solid-pages": "^0.3.1",
+    "vitest": "^3.2.4"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.12.1",
+  "dependencies": {
+    "@solid-primitives/scheduled": "^1.5.2",
+    "@solid-primitives/utils": "^6.3.1",
+    "solid-tiny-context": "0.1.2"
+  }
+}
