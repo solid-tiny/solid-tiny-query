@@ -11,11 +11,12 @@
     "build": "tsup",
     "dev": "vite",
     "test": "vitest",
+    "test:run": "vitest --run",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
     "lint": "npx ultracite lint",
     "lint:fix": "npx ultracite format",
-    "release": "commit-and-tag-version -i CHANGELOG.md --same-file",
+    "release": "pnpm lint:fix && pnpm test:run &&commit-and-tag-version -i CHANGELOG.md --same-file",
     "pub": "git push --follow-tags && pnpm build && pnpm publish",
     "prepare": "husky"
   },

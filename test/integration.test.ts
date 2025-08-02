@@ -1,7 +1,8 @@
-import { createRoot, createSignal } from 'solid-js';
+import { createSignal } from 'solid-js';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createQueryClient } from '../src/client';
-import { createQuery } from '../src/hooks/createQuery';
+import { createQuery, useQueryClient } from '../src';
+import { delay } from '../src/utils/query-utils';
+import { createWrapper } from './common';
 
 describe('Integration Tests', () => {
   beforeEach(() => {
@@ -12,170 +13,122 @@ describe('Integration Tests', () => {
     vi.useRealTimers();
   });
 
-  it('should create and use a complete query client with hooks', () => {
-    createRoot(() => {
-      const client = createQueryClient({
-        defaultGcTime: 5000,
-        defaultStaleTime: 1000,
+  it('set custom default stale time', async () => {
+    const wrapper = createWrapper({ defaultStaleTime: 5000 });
+    const [state, actions] = wrapper.run(() => useQueryClient());
+    expect(state.defaultStaleTime).toBe(5000);
+
+    const query = wrapper.run(() => {
+      return createQuery({
+        queryKey: () => 'test',
+        queryFn: async () => 'data',
       });
-
-      expect(client).toBeDefined();
-      const [state, actions] = client.value;
-
-      // Test client state
-      expect(state.defaultGcTime).toBe(5000);
-      expect(state.defaultStaleTime).toBe(1000);
-      expect(state.cache).toEqual({});
-
-      // Test cache operations
-      actions.setCache('user:1', { name: 'John', age: 30 });
-      const cached = actions.getCache('user:1');
-      expect(cached).toEqual({ name: 'John', age: 30 });
-
-      // Test stale time behavior
-      const fresh = actions.getCache('user:1', 2000);
-      expect(fresh).toEqual({ name: 'John', age: 30 });
-
-      // Test query creation
-      const query = createQuery({
-        queryKey: () => 'test-query',
-        queryFn: vi.fn().mockResolvedValue('test-data'),
-        initialValue: 'initial',
-      });
-
-      expect(query.data).toBe('initial');
-      expect(query.isLoading).toBe(false);
-      expect(query.isError).toBe(false);
-      expect(typeof query.refetch).toBe('function');
-      expect(typeof query.clearCache).toBe('function');
     });
+    await vi.advanceTimersByTimeAsync(100);
+    expect(query.data).toBe('data');
+    expect(actions.getCache('test', -1)).toBe('data');
+
+    const query2 = wrapper.run(() => {
+      return createQuery({
+        queryKey: () => 'test',
+        queryFn: async () => 'data2',
+      });
+    });
+    await vi.advanceTimersByTimeAsync(100);
+    // second query should use the cached data
+    expect(query2.data).toBe('data');
   });
 
-  it('should handle reactive query keys', () => {
-    createRoot(() => {
-      createQueryClient();
+  it('clear cache should work correctly', async () => {
+    const wrapper = createWrapper();
+    const [, actions] = wrapper.run(() => useQueryClient());
 
-      const [userId, setUserId] = createSignal(1);
-      const queryFn = vi.fn().mockResolvedValue('user-data');
+    const query = wrapper.run(() => {
+      return createQuery({
+        queryKey: () => 'test',
+        queryFn: async () => 'data',
+      });
+    });
+    await vi.advanceTimersByTimeAsync(100);
+    expect(query.data).toBe('data');
+    expect(actions.getCache('test', -1)).toBe('data');
 
-      const query = createQuery({
-        queryKey: () => `user:${userId()}`,
+    query.clearCache();
+    expect(actions.getCache('test', -1)).toBeNull();
+  });
+
+  it('clear cache with dynamic key', async () => {
+    const wrapper = createWrapper();
+    const [count, setCount] = createSignal(1);
+    const query = wrapper.run(() => {
+      return createQuery({
+        queryKey: () => `test-${count()}`,
+        queryFn: async () => `data-${count()}`,
+      });
+    });
+    const [state] = wrapper.run(() => useQueryClient());
+    const id = setInterval(() => {
+      setCount((c) => c + 1);
+      if (count() > 6) {
+        clearInterval(id);
+      }
+    }, 1000);
+    await vi.advanceTimersByTimeAsync(8000);
+    expect(Object.keys(state.cache).length).toBe(7);
+    query.clearCache();
+    expect(Object.keys(state.cache).length).toBe(0);
+  });
+
+  it('query with dynamic key should work correctly', async () => {
+    const wrapper = createWrapper();
+    const [count, setCount] = createSignal(1);
+    const queryFn = vi.fn(async () => {
+      await delay(10);
+      return `data-${count()}`;
+    });
+
+    const query = wrapper.run(() => {
+      return createQuery({
+        queryKey: () => `test-${count()}`,
         queryFn,
-        initialValue: 'loading...',
       });
-
-      expect(query.data).toBe('loading...');
-
-      // Change the user ID
-      setUserId(2);
-      vi.runAllTimers();
-
-      // Should have been called for the new key
-      expect(queryFn).toHaveBeenCalled();
     });
+
+    await vi.advanceTimersByTimeAsync(500);
+    expect(query.data).toBe('data-1');
+    expect(queryFn).toBeCalledTimes(1);
+
+    setCount(2);
+    await vi.advanceTimersByTimeAsync(500);
+    expect(query.data).toBe('data-2');
+    expect(queryFn).toBeCalledTimes(2);
   });
 
-  it('should handle garbage collection properly', () => {
-    createRoot(() => {
-      const client = createQueryClient();
-      const [state, actions] = client.value;
-
-      // Add some test data with different timestamps
-      const now = Date.now();
-      const oldTime = now - 10_000; // 10 seconds ago
-
-      // Add old entry that should be garbage collected
-      actions.setState('cache', 'old-key', {
-        jsonData: JSON.stringify({ data: 'old' }),
-        timestamp: oldTime,
-      });
-      actions.setState('gcConf', 'old-key', 5000); // 5 second gc time
-
-      // Add fresh entry that should not be garbage collected
-      actions.setState('cache', 'fresh-key', {
-        jsonData: JSON.stringify({ data: 'fresh' }),
-        timestamp: now,
-      });
-      actions.setState('gcConf', 'fresh-key', 15_000); // 15 second gc time
-
-      // Run garbage collection
-      actions.gc();
-
-      // Check results
-      expect(state.cache['old-key']).toBeUndefined();
-      expect(state.cache['fresh-key']).toBeDefined();
+  it('enabled should works correctly', async () => {
+    const wrapper = createWrapper();
+    const queryFn = vi.fn(async () => {
+      await delay(10);
+      return 'data';
     });
-  });
+    const [enabled, setEnabled] = createSignal(false);
 
-  it('should calculate minimum gc time correctly', () => {
-    createRoot(() => {
-      const client = createQueryClient({ defaultGcTime: 10_000 });
-      const [state, actions] = client.value;
-
-      // Add entries with different gc times
-      actions.setState('cache', 'key1', {
-        jsonData: '{}',
-        timestamp: Date.now(),
-      });
-      actions.setState('cache', 'key2', {
-        jsonData: '{}',
-        timestamp: Date.now(),
-      });
-      actions.setState('gcConf', 'key1', 8000);
-      actions.setState('gcConf', 'key2', 3000);
-
-      expect(state.minGcTime).toBe(3000);
-
-      // Remove the key with minimum time
-      actions.removeCache('key2');
-
-      expect(state.minGcTime).toBe(8000);
-    });
-  });
-
-  it('should handle corrupted cache gracefully', () => {
-    createRoot(() => {
-      const client = createQueryClient();
-      const [state, actions] = client.value;
-
-      // Manually add corrupted data
-      actions.setState('cache', 'corrupted', {
-        jsonData: 'invalid json{',
-        timestamp: Date.now(),
-      });
-
-      // Try to get corrupted data
-      const result = actions.getCache('corrupted');
-
-      // Should return null and clean up
-      expect(result).toBeNull();
-      expect(state.cache.corrupted).toBeUndefined();
-    });
-  });
-
-  it('should handle disabled queries', () => {
-    createRoot(() => {
-      createQueryClient();
-
-      const [enabled, setEnabled] = createSignal(false);
-      const queryFn = vi.fn().mockResolvedValue('data');
-
-      createQuery({
-        queryKey: () => 'disabled-test',
+    const query = wrapper.run(() => {
+      return createQuery({
+        queryKey: () => 'test',
         queryFn,
         enabled,
       });
-
-      // Should not fetch when disabled
-      vi.runAllTimers();
-      expect(queryFn).not.toHaveBeenCalled();
-
-      // Enable the query
-      setEnabled(true);
-      vi.runAllTimers();
-
-      // Now it should fetch
-      expect(queryFn).toHaveBeenCalled();
     });
+    await vi.advanceTimersByTimeAsync(500);
+    expect(query.data).toBeUndefined();
+    expect(queryFn).not.toBeCalled();
+    await query.refetch();
+    expect(query.data).toBeUndefined();
+    expect(queryFn).not.toBeCalled();
+
+    setEnabled(true);
+    await vi.advanceTimersByTimeAsync(500);
+    expect(query.data).toBe('data');
+    expect(queryFn).toBeCalledTimes(1);
   });
 });

@@ -1,39 +1,53 @@
-export type QueryKey = string | number;
+import type { Accessor } from 'solid-js';
+
+export type QueryKey = string | number | undefined | null;
 export type QueryKeys = QueryKey[];
 
-export type QueryFn<T, R = unknown> = (
-  info: QueryFnInfo<T, R>
-) => T | Promise<T>;
+export type QueryFn<T> = (info: QueryFnInfo<T>) => T | Promise<T>;
 
-export type QueryFnInfo<T, R = unknown> = {
+export type QueryFnInfo<T> = {
   value: T | undefined;
-  refetching: R | boolean;
+  refetching: boolean;
 };
 
-export type QueryOptions<T, R = unknown> = {
-  queryKey: () => QueryKey | QueryKeys | (QueryKey | QueryKeys)[];
-  queryFn: QueryFn<T, R>;
+export type QueryOptions<T> = {
+  queryKey: Accessor<QueryKey | QueryKeys | (QueryKey | QueryKeys)[]>;
+  queryFn: QueryFn<T>;
   staleTime?: number;
-  initialValue?: T;
-  enabled?: () => boolean;
-  retry?: number;
   /**
-   * Optional time in milliseconds to wait before garbage collecting the query.
+   * Initial data will be treated as normal fetched result. Which means it will
+   * be cached at first and prevent the first fetch.
    *
-   * If not provided, use staleTime > 5000 ? staleTime : 5000.
+   * If you want to use initial data as a placeholder, use `placeholderData` instead
    *
-   * If provided, minimum value is 5000.
-   *
-   * Set to 0 to disable garbage collection.
    */
-  gcTime?: number;
+  initialData?: T;
+  /**
+   * Set the timestamp when cache initialData
+   *
+   * @default Date.now()
+   */
+  initialDataUpdatedAt?: number;
+  /**
+   * Placeholder data will be used at the query's first refetching. It's mainly
+   * for the initial display of the query data.
+   *
+   * It will not be cached and will not prevent the first fetch.
+   */
+  placeholderData?: T;
+  enabled?: Accessor<boolean>;
+  retry?: number;
 };
 
-export type InitialedQueryOptions<T, R = unknown> = Omit<
-  QueryOptions<T, R>,
-  'initialValue'
+export type InitialedQueryOptions<T> = Omit<QueryOptions<T>, 'initialData'> & {
+  initialData: T;
+};
+
+export type PlaceholderQueryOptions<T> = Omit<
+  QueryOptions<T>,
+  'placeholderData'
 > & {
-  initialValue: T;
+  placeholderData: T;
 };
 
 export type QueryResult<T> = {
@@ -49,18 +63,10 @@ export type InitialedQueryResult<T> = Omit<QueryResult<T>, 'data'> & {
 };
 
 export type QueryClientOptions = {
-  defaultGcTime?: number;
   defaultStaleTime?: number;
 };
 
 export type CacheEntry = {
   jsonData: string;
   timestamp: number;
-};
-
-export type CacheState = {
-  cache: Record<string, CacheEntry>;
-  gcConf: Record<string, number>;
-  defaultGcTime: number;
-  defaultStaleTime: number;
 };

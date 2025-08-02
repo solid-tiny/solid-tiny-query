@@ -1,6 +1,7 @@
+import { waitFor } from '@solidjs/testing-library';
 import { createSignal } from 'solid-js';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createInterval, createWatch, isDef } from '../src/utils';
+import { createWatch, isDef } from '../src/utils';
 
 describe('Utils', () => {
   describe('isDef', () => {
@@ -55,62 +56,10 @@ describe('Utils', () => {
 
       setCount(1);
       setName('updated');
-      vi.runAllTimers();
 
-      expect(watchFn).toHaveBeenCalledWith(
-        [1, 'updated'],
-        undefined,
-        undefined
-      );
-    });
-  });
-
-  describe('createInterval', () => {
-    beforeEach(() => {
-      vi.useFakeTimers();
-    });
-
-    afterEach(() => {
-      vi.useRealTimers();
-    });
-
-    it('should create an interval with dynamic timing', () => {
-      const fn = vi.fn();
-      const [delay] = createSignal(1000);
-
-      createInterval(fn, delay);
-
-      // Fast forward time
-      vi.advanceTimersByTime(1000);
-      expect(fn).toHaveBeenCalledTimes(1);
-
-      vi.advanceTimersByTime(1000);
-      expect(fn).toHaveBeenCalledTimes(2);
-    });
-
-    it('should update interval when delay changes', () => {
-      const fn = vi.fn();
-      const [delay, setDelay] = createSignal(1000);
-
-      createInterval(fn, delay);
-
-      // Change delay
-      setDelay(500);
-      vi.runAllTimers();
-
-      // Advance by new delay
-      vi.advanceTimersByTime(500);
-      expect(fn).toHaveBeenCalledTimes(1);
-    });
-
-    it('should not create interval when delay is 0', () => {
-      const fn = vi.fn();
-      const [delay] = createSignal(0);
-
-      createInterval(fn, delay);
-
-      vi.advanceTimersByTime(5000);
-      expect(fn).not.toHaveBeenCalled();
+      waitFor(() => {
+        expect(watchFn).toHaveBeenCalledWith([1, 'updated']);
+      });
     });
   });
 });

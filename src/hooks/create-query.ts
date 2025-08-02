@@ -1,25 +1,27 @@
-import { debounce } from '@solid-primitives/scheduled';
+import { debounce, leading } from '@solid-primitives/scheduled';
 import { createMemo, createSignal } from 'solid-js';
 import { queryContext } from '../client';
 import type {
   InitialedQueryOptions,
   InitialedQueryResult,
+  PlaceholderQueryOptions,
   QueryOptions,
   QueryResult,
 } from '../types';
 import { createWatch, isDef } from '../utils';
-import { delay, getDefaultGcTime, getRealQueryKey } from '../utils/query-utils';
+import { delay, getRealQueryKey } from '../utils/query-utils';
 
-export function createQuery<T, R = unknown>(
-  opts: InitialedQueryOptions<T, R>
+export function createQuery<T>(
+  opts: InitialedQueryOptions<T>
 ): InitialedQueryResult<T>;
-export function createQuery<T, R = unknown>(
-  opts: QueryOptions<T, R>
-): QueryResult<T>;
-export function createQuery<T, R = unknown>(
-  opts: QueryOptions<T, R> | InitialedQueryOptions<T, R>
+export function createQuery<T>(
+  opts: PlaceholderQueryOptions<T>
+): InitialedQueryResult<T>;
+export function createQuery<T>(opts: QueryOptions<T>): QueryResult<T>;
+export function createQuery<T>(
+  opts: QueryOptions<T> | InitialedQueryOptions<T> | PlaceholderQueryOptions<T>
 ): QueryResult<T> | InitialedQueryResult<T> {
-  const [, actions] = queryContext.useContext();
+  const [state, actions, staticData] = queryContext.useContext();
 
   const realKey = createMemo(() => {
     return getRealQueryKey(opts.queryKey());
@@ -27,13 +29,19 @@ export function createQuery<T, R = unknown>(
 
   const cacheValue = createMemo(() => {
     const cachedValue = actions.getCache(realKey(), opts.staleTime);
-    return cachedValue === null ? undefined : (cachedValue as T);
+    return isDef(cachedValue) ? (cachedValue as T) : undefined;
   });
 
-  const [data, setData] = createSignal<T | undefined>(opts.initialValue);
+  const [data, setData] = createSignal<T | undefined>(opts.placeholderData);
   const [isLoading, setIsLoading] = createSignal<boolean>(false);
   const [isError, setIsError] = createSignal<boolean>(false);
   const [initialized, setInitialized] = createSignal<boolean>(false);
+
+  if (isDef(opts.initialData)) {
+    setData(() => opts.initialData);
+    setInitialized(true);
+    actions.setCache(realKey(), opts.initialData, opts.initialDataUpdatedAt);
+  }
 
   let historyKeys = {} as Record<string, boolean>;
   let latestFetchId = 0;
@@ -130,42 +138,32 @@ export function createQuery<T, R = unknown>(
     }
   );
 
-  const debounceKeyChange = debounce((keyValue: string) => {
-    const cachedValue = cacheValue();
+  const leadingDebounceKeyChange = leading(
+    debounce,
+    (keyValue: string) => {
+      const cachedValue = cacheValue();
 
-    if (isDef(cachedValue)) {
-      setData(() => cachedValue);
-    } else {
-      refetch();
-    }
-
-    // Configure garbage collection
-    if (isDef(opts.gcTime)) {
-      if (opts.gcTime === 0) {
-        actions.setState('gcConf', keyValue, 0 as never);
+      if (isDef(cachedValue)) {
+        setData(() => cachedValue);
       } else {
-        actions.setState(
-          'gcConf',
-          keyValue,
-          Math.max(opts.gcTime, 5000) as never
-        );
+        refetch();
       }
-    } else {
-      actions.setState(
-        'gcConf',
-        keyValue,
-        getDefaultGcTime(opts.staleTime) as never
-      );
-    }
-  }, 100);
 
-  createWatch(realKey, debounceKeyChange);
+      // Configure garbage collection
+      const currentGcTime = state.gcConf[keyValue] || staticData.gcTime;
+      const staleTime = opts.staleTime || 0;
+      if (staleTime > currentGcTime) {
+        actions.setState('gcConf', keyValue, staleTime);
+      }
+    },
+    100
+  );
+
+  createWatch(realKey, leadingDebounceKeyChange);
 
   createWatch(cacheValue, (v) => {
-    if (isDef(v) && v !== data()) {
+    if (isDef(v) && v !== data() && !isLoading() && !isError()) {
       setData(() => v);
-      setIsLoading(false);
-      setIsError(false);
     }
   });
 

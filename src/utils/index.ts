@@ -23,21 +23,3 @@ export function createWatch<S, Next extends Prev, Prev = Next>(
   // biome-ignore lint/suspicious/noExplicitAny: I need any
   createEffect(on(targets, fn, { defer: opt?.defer }) as any);
 }
-
-/**
- * Create an interval that can have dynamic timing
- */
-export function createInterval(fn: () => void, delay: Accessor<number>): void {
-  let intervalId: number;
-
-  const setupInterval = () => {
-    clearInterval(intervalId);
-    const currentDelay = delay();
-    if (currentDelay > 0) {
-      intervalId = setInterval(fn, currentDelay) as unknown as number;
-    }
-  };
-
-  createWatch(delay, setupInterval);
-  setupInterval();
-}

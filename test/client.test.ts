@@ -19,7 +19,6 @@ describe('Query Client', () => {
 
         expect(state.cache).toEqual({});
         expect(state.gcConf).toEqual({});
-        expect(state.defaultGcTime).toBe(1000 * 60 * 8); // 8 minutes
         expect(state.defaultStaleTime).toBe(0);
       });
     });
@@ -27,12 +26,10 @@ describe('Query Client', () => {
     it('should create a query client with custom options', () => {
       createRoot(() => {
         const client = createQueryClient({
-          defaultGcTime: 5000,
           defaultStaleTime: 1000,
         });
         const [state] = client.value;
 
-        expect(state.defaultGcTime).toBe(5000);
         expect(state.defaultStaleTime).toBe(1000);
       });
     });
@@ -48,7 +45,7 @@ describe('Query Client', () => {
         actions.setCache('user:1', { name: 'John', id: 1 });
 
         // Get cache value
-        const cached = actions.getCache('user:1');
+        const cached = actions.getCache('user:1', -1);
         expect(cached).toEqual({ name: 'John', id: 1 });
 
         // Check cache state
@@ -113,7 +110,7 @@ describe('Query Client', () => {
         });
 
         // Getting corrupted data should return null and remove the entry
-        const result = actions.getCache('corrupted');
+        const result = actions.getCache('corrupted', -1);
         expect(result).toBeNull();
         expect(state.cache.corrupted).toBeUndefined();
       });
@@ -141,43 +138,13 @@ describe('Query Client', () => {
 
         actions.setCache(['user', 'profile', 1], { name: 'John' });
 
-        const cached = actions.getCache(['user', 'profile', 1]);
+        const cached = actions.getCache(['user', 'profile', 1], -1);
         expect(cached).toEqual({ name: 'John' });
       });
     });
   });
 
   describe('Garbage Collection', () => {
-    it('should calculate minimum gc time correctly', () => {
-      createRoot(() => {
-        const client = createQueryClient({ defaultGcTime: 10_000 });
-        const [state, actions] = client.value;
-
-        // Set different gc times for different keys
-        actions.setState('cache', 'key1', {
-          jsonData: '{}',
-          timestamp: Date.now(),
-        });
-        actions.setState('cache', 'key2', {
-          jsonData: '{}',
-          timestamp: Date.now(),
-        });
-        actions.setState('gcConf', 'key1', 5000);
-        actions.setState('gcConf', 'key2', 3000);
-
-        expect(state.minGcTime).toBe(3000);
-      });
-    });
-
-    it('should use default gc time when no specific gc times are set', () => {
-      createRoot(() => {
-        const client = createQueryClient({ defaultGcTime: 8000 });
-        const [state] = client.value;
-
-        expect(state.minGcTime).toBe(8000);
-      });
-    });
-
     it('should garbage collect stale entries', () => {
       createRoot(() => {
         const client = createQueryClient();
@@ -204,26 +171,6 @@ describe('Query Client', () => {
         // Old entry should be removed, fresh entry should remain
         expect(state.cache['old-key']).toBeUndefined();
         expect(state.cache['fresh-key']).toBeDefined();
-      });
-    });
-
-    it('should not garbage collect entries with gc time 0', () => {
-      createRoot(() => {
-        const client = createQueryClient();
-        const [state, actions] = client.value;
-
-        // Set old cache entry with gc time 0 (disabled)
-        const oldTime = Date.now() - 10_000;
-        actions.setState('cache', 'persistent-key', {
-          jsonData: '{}',
-          timestamp: oldTime,
-        });
-        actions.setState('gcConf', 'persistent-key', 0);
-
-        actions.gc();
-
-        // Entry should still exist
-        expect(state.cache['persistent-key']).toBeDefined();
       });
     });
   });

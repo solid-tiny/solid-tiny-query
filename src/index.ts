@@ -3,10 +3,9 @@
 export { createQueryClient, useQueryClient } from './client';
 
 // Export main functions
-export { createQuery } from './hooks/createQuery';
+export { createQuery } from './hooks/create-query';
 export type {
   CacheEntry,
-  CacheState,
   InitialedQueryOptions,
   InitialedQueryResult,
   QueryClientOptions,
