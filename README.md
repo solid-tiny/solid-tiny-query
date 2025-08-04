@@ -350,7 +350,3 @@ This library is designed as a lightweight alternative to React Query for SolidJS
 - Smaller bundle size with zero configuration required  
 - Built-in automatic garbage collection
 - Simplified API focused on common use cases
-
-## License
-
-ISC
