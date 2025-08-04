@@ -265,16 +265,7 @@ function SearchResults() {
 
 ## Best Practices
 
-1. **Use descriptive and stable query keys**: Make them unique, hierarchical, and avoid frequent changes
-   ```tsx
-   // ✅ Good - stable, descriptive keys
-   queryKey: () => ['users', userId(), 'posts', { status: 'published' }]
-   
-   // ❌ Bad - includes functions or unstable references
-   queryKey: () => ['posts', someFunction, { createdAt: new Date() }]
-   ```
-
-2. **Handle loading and error states gracefully**: Always provide user feedback
+1. **Handle loading and error states gracefully**: Always provide user feedback
    ```tsx
    // ✅ Good - comprehensive state handling
    <Show when={query.isLoading} fallback={
@@ -288,17 +279,17 @@ function SearchResults() {
    </Show>
    ```
 
-3. **Set appropriate stale times**: Balance data freshness with performance
+2. **Set appropriate stale times**: Balance data freshness with performance
    - User profiles: 300000ms (5 minutes)
    - Search results: 30000ms (30 seconds)  
    - Real-time data: 0ms (always fresh)
 
-4. **Use conditional queries effectively**: Enable queries based on dependencies
+3. **Use conditional queries effectively**: Enable queries based on dependencies
    ```tsx
    enabled: () => Boolean(userId() && userPermissions().canViewPosts)
    ```
 
-5. **Optimize query functions**: Include current data for optimistic updates
+4. **Optimize query functions**: Include current data for optimistic updates
    ```tsx
    queryFn: async ({ value, refetching }) => {
      if (refetching && value) {
@@ -309,14 +300,15 @@ function SearchResults() {
    }
    ```
 
-6. **Clean up when needed**: Use `clearCache()` for sensitive data or memory management
+5. **Clean up when needed**: Use `clearCache()` to remove stale data
    ```tsx
-   onCleanup(() => {
-     sensitiveDataQuery.clearCache();
+   doApiUpdateData().then(() => {
+     // Clear cache after successful update
+     query.clearCache();
    });
    ```
 
-7. **Leverage TypeScript**: Use proper typing for better DX and error prevention
+6. **Leverage TypeScript**: Use proper typing for better DX and error prevention
    ```tsx
    interface User { id: string; name: string; }
    
