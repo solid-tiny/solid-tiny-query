@@ -48,8 +48,6 @@
   "license": "ISC",
   "packageManager": "pnpm@10.12.1",
   "dependencies": {
-    "@solid-primitives/scheduled": "^1.5.2",
-    "@solid-primitives/utils": "^6.3.1",
     "solid-tiny-context": "0.1.2"
   }
 }

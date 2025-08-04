@@ -4,6 +4,7 @@ import {
   createEffect,
   type OnEffectFunction,
   on,
+  onCleanup,
 } from 'solid-js';
 
 /**
@@ -22,4 +23,24 @@ export function createWatch<S, Next extends Prev, Prev = Next>(
 ) {
   // biome-ignore lint/suspicious/noExplicitAny: I need any
   createEffect(on(targets, fn, { defer: opt?.defer }) as any);
+}
+
+/**
+ * Simple debounce function that delays execution until after wait milliseconds
+ * have passed since the last time it was invoked.
+ */
+export function debounce<T extends unknown[]>(
+  func: (...args: T) => void,
+  wait: number
+): (...args: T) => void {
+  let timeoutId: ReturnType<typeof setTimeout>;
+
+  onCleanup(() => {
+    clearTimeout(timeoutId);
+  });
+
+  return (...args: T) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func(...args), wait);
+  };
 }

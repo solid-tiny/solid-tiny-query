@@ -2,20 +2,129 @@
 applyTo: "**/*.{ts,tsx,js,jsx}"
 ---
 
-# Project Context
-Ultracite enforces strict type safety, accessibility standards, and consistent code quality for JavaScript/TypeScript projects using Biome's lightning-fast formatter and linter.
+# Solid Tiny Query - AI Coding Instructions
 
-## Key Principles
-- Zero configuration required
-- Subsecond performance
-- Maximum type safety
-- AI-friendly code generation
+A lightweight, type-safe query library for SolidJS applications with automatic cache management and reactive data fetching.
+
+## Project Architecture
+
+### Core Components
+- **`src/client/`** - Query client context using `solid-tiny-context` for state management
+- **`src/hooks/`** - Main `createQuery` hook with overloaded signatures for type safety
+- **`src/types/`** - TypeScript definitions with strict typing for QueryKey, QueryFn, and options
+- **`src/utils/`** - Utilities for debouncing, caching, and query key serialization
+
+### Key Design Patterns
+- **Reactive Query Keys**: Use `Accessor<QueryKey>` functions, not static values
+- **Overloaded Signatures**: `createQuery` returns different types based on `initialData`/`placeholderData`
+- **Cache Serialization**: All data stored as JSON strings with timestamps in `Record<string, CacheEntry>`
+- **Garbage Collection**: Automatic cleanup of unused cache entries via reference counting
+
+## SolidJS-Specific Rules
+
+### Query Key Patterns
+```typescript
+// ✅ Correct - reactive function returning stable keys
+queryKey: () => ['users', userId(), { status: filters() }]
+
+// ❌ Wrong - direct signal access or unstable references  
+queryKey: () => ['users', userId, new Date()]
+```
+
+### Type Safety with Overloads
+```typescript
+// ✅ Initializes with T, prevents first fetch
+const query = createQuery({
+  queryKey: () => ['user'],
+  queryFn: async () => fetchUser(),
+  initialData: { name: 'John' }, // Returns InitialedQueryResult<T>
+});
+
+// ✅ Shows placeholder during first fetch
+const query = createQuery({
+  queryKey: () => ['user'], 
+  queryFn: async () => fetchUser(),
+  placeholderData: { name: 'Loading...' }, // Returns InitialedQueryResult<T>
+});
+
+// ✅ No initial data, data can be undefined
+const query = createQuery({
+  queryKey: () => ['user'],
+  queryFn: async () => fetchUser(), // Returns QueryResult<T>
+});
+```
+
+### Query Function Patterns
+```typescript
+// ✅ Use info parameter for optimistic updates
+queryFn: async ({ value, refetching }) => {
+  if (refetching && value) {
+    // Show existing data while refetching
+  }
+  return await fetchData();
+}
+```
+
+## Development Workflow
+
+### Commands
+- `pnpm test` - Run tests with Vitest (uses fake timers for async testing)
+- `pnpm test:ui` - Visual test runner interface
+- `pnpm build` - Build with tsup (ESM only, generates .d.ts files)
+- `pnpm lint:fix` - Format with Ultracite (extends Biome configuration)
+- `pnpm type-check` - TypeScript validation without emitting files
+
+### Testing Patterns
+- Use `createWrapper()` from `test/common.tsx` for context setup
+- Mock async functions with `vi.fn()` and `delay()` utility
+- Test reactive behavior with `vi.useFakeTimers()` in describe blocks
+- Validate type inference with overloaded signatures
+
+## Critical Implementation Details
+
+### Cache Key Serialization
+```typescript
+// Keys are serialized using getRealQueryKey() 
+const realKey = getRealQueryKey(['user', 123, { active: true }]);
+// Results in: "user,123,{\"active\":true}"
+```
+
+### State Management Architecture
+- Uses `solid-tiny-context` for reactive client state
+- Cache entries store: `{ jsonData: string, timestamp: number }`
+- Garbage collection tracks references in `gcConf` object
+- Debounced key changes prevent excessive API calls
+
+### Memory Management
+```typescript
+// ✅ Clean up sensitive data when component unmounts
+onCleanup(() => {
+  sensitiveQuery.clearCache(); // Removes all history keys
+});
+```
+
+### Error Handling & Retries
+```typescript
+// Default retry logic with exponential backoff
+const performFetch = async (id, key, attempt, maxRetry) => {
+  try {
+    // ... fetch logic
+  } catch (error) {
+    if (attempt < maxRetry) {
+      await delay(1400); // Fixed 1.4s delay between retries
+      return performFetch(id, key, attempt + 1, maxRetry);
+    }
+    // Set error state
+  }
+};
+```
 
 ## Before Writing Code
-1. Analyze existing patterns in the codebase
-2. Consider edge cases and error scenarios
-3. Follow the rules below strictly
-4. Validate accessibility requirements
+1. Understand the reactive SolidJS patterns (signals, memos, effects)
+2. Check existing query key patterns and cache serialization
+3. Consider stale-while-revalidate behavior and cache timing
+4. Validate TypeScript overloads for proper type inference
+5. Follow Ultracite/Biome linting rules strictly
 
 ## Rules
 

@@ -1,4 +1,3 @@
-import { debounce, leading } from '@solid-primitives/scheduled';
 import { createMemo, createSignal } from 'solid-js';
 import { queryContext } from '../client';
 import type {
@@ -8,7 +7,7 @@ import type {
   QueryOptions,
   QueryResult,
 } from '../types';
-import { createWatch, isDef } from '../utils';
+import { createWatch, debounce, isDef } from '../utils';
 import { delay, getRealQueryKey } from '../utils/query-utils';
 
 export function createQuery<T>(
@@ -90,6 +89,7 @@ export function createQuery<T>(
       }
 
       actions.setCache(tempKey, result);
+      setIsError(false);
     } catch (error) {
       if (latestFetchId !== id) {
         return; // Ignore stale fetch
@@ -111,7 +111,6 @@ export function createQuery<T>(
     }
 
     setIsLoading(true);
-    setIsError(false);
 
     const id = Date.now();
     latestFetchId = id;
@@ -138,28 +137,24 @@ export function createQuery<T>(
     }
   );
 
-  const leadingDebounceKeyChange = leading(
-    debounce,
-    (keyValue: string) => {
-      const cachedValue = cacheValue();
+  const debouncedKeyChange = debounce((keyValue: string) => {
+    const cachedValue = cacheValue();
 
-      if (isDef(cachedValue)) {
-        setData(() => cachedValue);
-      } else {
-        refetch();
-      }
+    if (isDef(cachedValue)) {
+      setData(() => cachedValue);
+    } else {
+      refetch();
+    }
 
-      // Configure garbage collection
-      const currentGcTime = state.gcConf[keyValue] || staticData.gcTime;
-      const staleTime = opts.staleTime || 0;
-      if (staleTime > currentGcTime) {
-        actions.setState('gcConf', keyValue, staleTime);
-      }
-    },
-    100
-  );
+    // Configure garbage collection
+    const currentGcTime = state.gcConf[keyValue] || staticData.gcTime;
+    const staleTime = opts.staleTime || 0;
+    if (staleTime > currentGcTime) {
+      actions.setState('gcConf', keyValue, staleTime);
+    }
+  }, 100);
 
-  createWatch(realKey, leadingDebounceKeyChange);
+  createWatch(realKey, debouncedKeyChange);
 
   createWatch(cacheValue, (v) => {
     if (isDef(v) && v !== data() && !isLoading() && !isError()) {

@@ -131,4 +131,77 @@ describe('Integration Tests', () => {
     expect(query.data).toBe('data');
     expect(queryFn).toBeCalledTimes(1);
   });
+
+  it('retry should work correctly', async ({ onTestFinished }) => {
+    onTestFinished(() => {
+      // if the event was never called during the test,
+      // make sure it's removed before the next test starts
+      process.removeAllListeners('unhandledrejection');
+    });
+
+    // disable Vitest's rejection handle
+    process.on('unhandledRejection', () => {
+      // your own handler
+    });
+
+    const wrapper = createWrapper();
+    let count = 0;
+    const queryFn = vi.fn(async () => {
+      await delay(10);
+      count++;
+      if (count < 4) {
+        throw new Error('error');
+      }
+      return 'data';
+    });
+    const query = wrapper.run(() => {
+      return createQuery({
+        queryKey: () => 'test',
+        queryFn,
+        retry: 3,
+      });
+    });
+
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(queryFn).toBeCalledTimes(1);
+
+    await vi.advanceTimersByTimeAsync(8000);
+    expect(query.isError).toBe(false);
+    expect(queryFn).toBeCalledTimes(4);
+    expect(query.data).toBe('data');
+  });
+
+  it('should handle error correctly', async ({ onTestFinished }) => {
+    onTestFinished(() => {
+      // if the event was never called during the test,
+      // make sure it's removed before the next test starts
+      process.removeAllListeners('unhandledrejection');
+    });
+
+    // disable Vitest's rejection handle
+    process.on('unhandledRejection', () => {
+      // your own handler
+    });
+
+    const wrapper = createWrapper();
+    const queryFn = vi.fn(() => 'data').mockRejectedValueOnce('first call');
+    const query = wrapper.run(() => {
+      return createQuery({
+        queryKey: () => 'test',
+        queryFn,
+        retry: 0,
+      });
+    });
+
+    await vi.advanceTimersByTimeAsync(8000);
+    expect(query.isError).toBe(true);
+    expect(queryFn).toBeCalledTimes(1);
+
+    // should resolve after refetch
+    query.refetch();
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(query.isError).toBe(false);
+    expect(queryFn).toBeCalledTimes(2);
+    expect(query.data).toBe('data');
+  });
 });

@@ -1,5 +1,9 @@
 # Solid Tiny Query
 
+![npm](https://img.shields.io/npm/v/solid-tiny-query) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://makeapullrequest.com) ![npm package minimized gzipped size](https://img.shields.io/bundlejs/size/solid-tiny-context)
+
+
+
 A lightweight, type-safe query library for SolidJS applications. Inspired by React Query but designed specifically for SolidJS with a minimal footprint.
 
 ## Features
@@ -125,7 +129,7 @@ Creates a reactive query with automatic caching and background updates.
 - `isLoading: boolean` - Loading state during active fetch
 - `isError: boolean` - Error state if query failed
 - `refetch: () => Promise<void>` - Function to manually refetch data
-- `clearCache: () => void` - Function to clear all cached data for this query
+- `clearCache: () => void` - Function to clear all cached data for this query (and history queries if key is reactive)
 
 ### `useQueryClient()`
 

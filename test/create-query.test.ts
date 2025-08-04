@@ -55,6 +55,7 @@ describe('createQuery', () => {
         });
       });
 
+      await vi.advanceTimersByTimeAsync(100);
       expect(query.data).toBeUndefined();
       const [, actions] = wrapper.run(() => useQueryClient());
       expect(actions.getCache('test', -1)).toBeNull();
@@ -81,6 +82,7 @@ describe('createQuery', () => {
         });
       });
 
+      await vi.advanceTimersByTimeAsync(110);
       expect(query.data).toBe('placeholder');
       const [, actions] = wrapper.run(() => useQueryClient());
       expect(actions.getCache('test', -1)).toBeNull();
@@ -108,7 +110,7 @@ describe('createQuery', () => {
         });
       });
 
-      await vi.advanceTimersByTimeAsync(80);
+      await vi.advanceTimersByTimeAsync(180);
       const [, actions] = wrapper.run(() => useQueryClient());
       // make sure data is cached
       expect(actions.getCache('test', -1)).toBe('data-1');
@@ -122,7 +124,7 @@ describe('createQuery', () => {
         });
       });
 
-      await vi.advanceTimersByTimeAsync(50);
+      await vi.advanceTimersByTimeAsync(150);
       expect(secondQuery.data).toBe('data-1');
       secondQuery.refetch();
       await vi.advanceTimersByTimeAsync(100);
@@ -146,7 +148,7 @@ describe('createQuery', () => {
         });
       });
 
-      await vi.advanceTimersByTimeAsync(50);
+      await vi.advanceTimersByTimeAsync(150);
       expect(query.data).toBe('data');
       expect(queryFn).toBeCalledTimes(1);
 
@@ -163,7 +165,7 @@ describe('createQuery', () => {
           queryFn: queryFn2,
         });
       });
-      await vi.advanceTimersByTimeAsync(50);
+      await vi.advanceTimersByTimeAsync(150);
       expect(query2.data).toBe('data2');
       expect(queryFn2).toBeCalledTimes(1);
       expect(actions.getCache('test', -1)).toBe('data2');
