@@ -1,7 +1,6 @@
 # Solid Tiny Query
 
-![npm](https://img.shields.io/npm/v/solid-tiny-query) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://makeapullrequest.com) ![npm package minimized gzipped size](https://img.shields.io/bundlejs/size/solid-tiny-context)
-
+![npm](https://img.shields.io/npm/v/solid-tiny-query) ![npm bundle size](https://img.shields.io/bundlephobia/minzip/solid-tiny-query) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://makeapullrequest.com)
 
 
 A lightweight, type-safe query library for SolidJS applications. Inspired by React Query but designed specifically for SolidJS with a minimal footprint.
@@ -104,6 +103,7 @@ function UserProfile() {
 Creates a new query client context with automatic garbage collection.
 
 **Options:**
+
 - `defaultStaleTime?: number` - Default time in ms after which data is considered stale (default: 0)
 
 **Returns:** A SolidJS context provider component
@@ -345,6 +345,13 @@ function SearchResults() {
 - **Request deduplication**: Multiple components using the same query share results
 - **Background refetching**: Keep data fresh without blocking UI
 - **Conditional execution**: Only run queries when enabled and dependencies are met
+
+## FAQ
+
+### Why initial fetch didn't fire immediately?
+
+According to the debounced key change logic, the initial fetch didn't trigger until the first stable key was established. This prevents unnecessary requests when the query key is still being set up. The delay time is 100ms.
+
 
 ## Migration Notes
 
