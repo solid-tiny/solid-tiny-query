@@ -24,13 +24,16 @@ describe('Query Client', () => {
     });
 
     it('should create a query client with custom options', () => {
+      const onError = vi.fn();
       createRoot(() => {
         const client = createQueryClient({
           defaultStaleTime: 1000,
+          onError,
         });
-        const [state] = client.value;
+        const [state, , staticData] = client.value;
 
         expect(state.defaultStaleTime).toBe(1000);
+        expect(staticData.onError).toBe(onError);
       });
     });
   });

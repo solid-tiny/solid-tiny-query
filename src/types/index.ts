@@ -65,6 +65,13 @@ export type InitialedQueryResult<T> = Omit<QueryResult<T>, 'data'> & {
 
 export type QueryClientOptions = {
   defaultStaleTime?: number;
+  onError?: (
+    error: unknown,
+    info: {
+      parsedQueryKey: string;
+      queryOpts: QueryOptions<unknown>;
+    }
+  ) => void;
 };
 
 export type CacheEntry = {

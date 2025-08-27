@@ -205,7 +205,9 @@ describe('Integration Tests', () => {
     expect(query.data).toBe('data');
   });
 
-  it('should trigger onError is exist', async ({ onTestFinished }) => {
+  it('should trigger onError if is settled in hook', async ({
+    onTestFinished,
+  }) => {
     onTestFinished(() => {
       // if the event was never called during the test,
       // make sure it's removed before the next test starts
@@ -232,6 +234,44 @@ describe('Integration Tests', () => {
     expect(query.isError).toBe(true);
     expect(queryFn).toBeCalledTimes(1);
     expect(handleErrorFn).toBeCalledTimes(1);
+
+    query.refetch();
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(query.isError).toBe(false);
+    expect(handleErrorFn).toBeCalledTimes(1);
+  });
+
+  it('should trigger onError if is settled in client', async ({
+    onTestFinished,
+  }) => {
+    onTestFinished(() => {
+      // if the event was never called during the test,
+      // make sure it's removed before the next test starts
+      process.removeAllListeners('unhandledrejection');
+    });
+
+    // disable Vitest's rejection handle
+    process.on('unhandledRejection', () => {
+      // your own handler
+    });
+    const handleErrorFn = vi.fn();
+    const wrapper = createWrapper({
+      onError: handleErrorFn,
+    });
+    const queryFn = vi.fn(() => 'data').mockRejectedValueOnce('first call');
+
+    const query = wrapper.run(() => {
+      return createQuery({
+        queryKey: () => 'test',
+        queryFn,
+        retry: 0,
+      });
+    });
+    await vi.advanceTimersByTimeAsync(8000);
+    expect(query.isError).toBe(true);
+    expect(queryFn).toBeCalledTimes(1);
+    expect(handleErrorFn).toBeCalledTimes(1);
+    expect(handleErrorFn).toBeCalledWith('first call', expect.any(Object));
 
     query.refetch();
     await vi.advanceTimersByTimeAsync(1000);

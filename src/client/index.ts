@@ -98,6 +98,7 @@ export const queryContext = createComponentState({
   nowrapData: () => ({
     gcInterval: 1000 * 60, // Garbage collection interval
     gcTime: 5 * 1000 * 60, // Default garbage collection time
+    onError: undefined as QueryClientOptions['onError'] | undefined,
   }),
 });
 
@@ -110,6 +111,7 @@ export function createQueryClient(opts?: QueryClientOptions) {
   });
 
   const [, actions, staticData] = Context.value;
+  staticData.onError = opts?.onError;
 
   // Set up garbage collection interval
   setInterval(() => actions.gc(), staticData.gcInterval);

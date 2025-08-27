@@ -5,9 +5,9 @@ import {
   type Owner,
   runWithOwner,
 } from 'solid-js';
-import { createQueryClient } from '../src';
+import { createQueryClient, type QueryClientOptions } from '../src';
 
-export function createWrapper(params?: { defaultStaleTime?: number }) {
+export function createWrapper(params?: QueryClientOptions) {
   const Wrapper = (props: { children: JSX.Element }) => {
     const client = createQueryClient(params);
     return <client.Provider>{props.children}</client.Provider>;

@@ -100,6 +100,10 @@ export function createQuery<T>(
         return await performFetch(id, tempKey, attempt + 1, maxRetry);
       }
 
+      staticData.onError?.(error, {
+        parsedQueryKey: tempKey,
+        queryOpts: opts as QueryOptions<unknown>,
+      });
       opts.onError?.(error);
       setIsError(true);
       throw error;
