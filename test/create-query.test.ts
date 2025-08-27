@@ -1,7 +1,7 @@
+import { sleep } from 'solid-tiny-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useQueryClient } from '../src';
 import { createQuery } from '../src/hooks/create-query';
-import { delay } from '../src/utils/query-utils';
 import { createWrapper } from './common';
 
 describe('createQuery', () => {
@@ -17,7 +17,7 @@ describe('createQuery', () => {
       const wrapper = createWrapper();
       wrapper.dispose();
       const queryFn = vi.fn(async () => {
-        await delay(50);
+        await sleep(50);
         return 'data';
       });
       const query = wrapper.run(() => {
@@ -44,7 +44,7 @@ describe('createQuery', () => {
     it('should create a query without initial data', async () => {
       const wrapper = createWrapper();
       const queryFn = vi.fn(async () => {
-        await delay(80);
+        await sleep(80);
         return 'data';
       });
       const query = wrapper.run(() => {
@@ -70,7 +70,7 @@ describe('createQuery', () => {
     it('should create a query with placeholder data', async () => {
       const wrapper = createWrapper();
       const queryFn = vi.fn(async () => {
-        await delay(80);
+        await sleep(80);
         return 'data';
       });
       const query = wrapper.run(() => {
@@ -98,7 +98,7 @@ describe('createQuery', () => {
       const wrapper = createWrapper();
       let count = 1;
       const queryFn = vi.fn(async () => {
-        await delay(50);
+        await sleep(50);
         return `data-${count++}`;
       });
       // first query
@@ -138,7 +138,7 @@ describe('createQuery', () => {
     it('should create a query without stale time', async () => {
       const wrapper = createWrapper();
       const queryFn = vi.fn(async () => {
-        await delay(10);
+        await sleep(10);
         return 'data';
       });
       const query = wrapper.run(() => {
@@ -156,7 +156,7 @@ describe('createQuery', () => {
       expect(actions.getCache('test', -1)).toBe('data');
 
       const queryFn2 = vi.fn(async () => {
-        await delay(10);
+        await sleep(10);
         return 'data2';
       });
       const query2 = wrapper.run(() => {

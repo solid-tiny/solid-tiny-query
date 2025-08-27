@@ -1,4 +1,5 @@
 import type { Accessor } from 'solid-js';
+import type { Maybe } from '../utils';
 
 export type QueryKey = string | number | undefined | null;
 export type QueryKeys = QueryKey[];
@@ -37,7 +38,7 @@ export type QueryOptions<T> = {
   placeholderData?: T;
   enabled?: Accessor<boolean>;
   retry?: number;
-  onError?: (error: unknown) => void;
+  onError?: (error: unknown) => Maybe<Error | string | false>;
 };
 
 export type InitialedQueryOptions<T> = Omit<QueryOptions<T>, 'initialData'> & {

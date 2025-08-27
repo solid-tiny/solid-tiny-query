@@ -1,5 +1,5 @@
 import { createMemo, createSignal, onCleanup } from 'solid-js';
-import { createDebouncedWatch, createWatch } from 'solid-tiny-utils';
+import { createDebouncedWatch, createWatch, sleep } from 'solid-tiny-utils';
 import { queryContext } from '../client';
 import type {
   InitialedQueryOptions,
@@ -9,7 +9,7 @@ import type {
   QueryResult,
 } from '../types';
 import { isDef } from '../utils';
-import { delay, getRealQueryKey } from '../utils/query-utils';
+import { getRealQueryKey } from '../utils/query-utils';
 
 export function createQuery<T>(
   opts: InitialedQueryOptions<T>
@@ -23,6 +23,7 @@ export function createQuery<T>(
 ): QueryResult<T> | InitialedQueryResult<T> {
   const [state, actions, staticData] = queryContext.useContext();
   let isCleanedUp = false;
+  let isInitialized = false;
 
   onCleanup(() => {
     isCleanedUp = true;
@@ -40,11 +41,10 @@ export function createQuery<T>(
   const [data, setData] = createSignal<T | undefined>(opts.placeholderData);
   const [isLoading, setIsLoading] = createSignal<boolean>(false);
   const [isError, setIsError] = createSignal<boolean>(false);
-  const [initialized, setInitialized] = createSignal<boolean>(false);
 
   if (isDef(opts.initialData)) {
     setData(() => opts.initialData);
-    setInitialized(true);
+    isInitialized = true;
     actions.setCache(realKey(), opts.initialData, opts.initialDataUpdatedAt);
   }
 
@@ -71,11 +71,25 @@ export function createQuery<T>(
     return opts.enabled ? opts.enabled() : true;
   });
 
+  const handleFetchError = (error: unknown, tempKey: string) => {
+    const res = opts.onError?.(error);
+
+    if (res !== false) {
+      staticData.onError?.(res || error, {
+        parsedQueryKey: tempKey,
+        queryOpts: opts as QueryOptions<unknown>,
+      });
+    }
+
+    setIsError(true);
+  };
+
   const performFetch = async (
     id: number,
     tempKey: string,
     attempt: number,
     maxRetry: number
+    // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: I tried, I failed
   ): Promise<void> => {
     try {
       const result = await opts.queryFn({
@@ -89,7 +103,7 @@ export function createQuery<T>(
 
       if (tempKey === realKey()) {
         setData(() => result);
-        setInitialized(true);
+        isInitialized = true;
       }
 
       actions.setCache(tempKey, result);
@@ -99,18 +113,14 @@ export function createQuery<T>(
         return; // Ignore stale fetch
       }
 
-      // continue fetch if not cleaned up and still needs to retry
-      if (attempt < maxRetry && !isCleanedUp) {
-        await delay(1400);
-        return await performFetch(id, tempKey, attempt + 1, maxRetry);
+      if (attempt < maxRetry) {
+        await sleep(1400);
+        if (!isCleanedUp) {
+          return await performFetch(id, tempKey, attempt + 1, maxRetry);
+        }
       }
 
-      staticData.onError?.(error, {
-        parsedQueryKey: tempKey,
-        queryOpts: opts as QueryOptions<unknown>,
-      });
-      opts.onError?.(error);
-      setIsError(true);
+      handleFetchError(error, tempKey);
       throw error;
     }
   };
@@ -138,7 +148,7 @@ export function createQuery<T>(
   createWatch(
     enabled,
     (isEnabled) => {
-      if (isEnabled && !initialized()) {
+      if (isEnabled && !isInitialized) {
         refetch();
       }
     },

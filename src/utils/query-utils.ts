@@ -20,10 +20,3 @@ export function getRealQueryKey(
   }
   return parseKey(key);
 }
-
-/**
- * Create a delay promise for retry logic
- */
-export function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}

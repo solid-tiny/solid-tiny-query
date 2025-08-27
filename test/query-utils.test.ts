@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from 'vitest';
-import { delay, getRealQueryKey } from '../src/utils/query-utils';
+import { describe, expect, it } from 'vitest';
+import { getRealQueryKey } from '../src/utils/query-utils';
 
 describe('Query Utils', () => {
   describe('getRealQueryKey', () => {
@@ -41,40 +41,6 @@ describe('Query Utils', () => {
       expect(getRealQueryKey([null, undefined])).not.toEqual(
         getRealQueryKey([undefined, undefined])
       );
-    });
-  });
-
-  describe('delay', () => {
-    it('should resolve after specified milliseconds', async () => {
-      vi.useFakeTimers();
-
-      const promise = delay(1000);
-      let resolved = false;
-
-      promise.then(() => {
-        resolved = true;
-      });
-
-      expect(resolved).toBe(false);
-
-      vi.advanceTimersByTime(999);
-      await Promise.resolve(); // Let promises resolve
-      expect(resolved).toBe(false);
-
-      vi.advanceTimersByTime(1);
-      await Promise.resolve();
-      expect(resolved).toBe(true);
-
-      vi.useRealTimers();
-    });
-
-    it('should resolve immediately for 0 delay', async () => {
-      const start = Date.now();
-      await delay(0);
-      const end = Date.now();
-
-      // Should resolve very quickly (within a few milliseconds)
-      expect(end - start).toBeLessThan(18);
     });
   });
 });

@@ -1,7 +1,7 @@
 import { createSignal } from 'solid-js';
+import { sleep } from 'solid-tiny-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createQuery, useQueryClient } from '../src';
-import { delay } from '../src/utils/query-utils';
 import { createWrapper } from './common';
 
 describe('Integration Tests', () => {
@@ -83,7 +83,7 @@ describe('Integration Tests', () => {
     const wrapper = createWrapper();
     const [count, setCount] = createSignal(1);
     const queryFn = vi.fn(async () => {
-      await delay(10);
+      await sleep(10);
       return `data-${count()}`;
     });
 
@@ -107,7 +107,7 @@ describe('Integration Tests', () => {
   it('enabled should works correctly', async () => {
     const wrapper = createWrapper();
     const queryFn = vi.fn(async () => {
-      await delay(10);
+      await sleep(10);
       return 'data';
     });
     const [enabled, setEnabled] = createSignal(false);
@@ -147,7 +147,7 @@ describe('Integration Tests', () => {
     const wrapper = createWrapper();
     let count = 0;
     const queryFn = vi.fn(async () => {
-      await delay(10);
+      await sleep(10);
       count++;
       if (count < 4) {
         throw new Error('error');
@@ -317,5 +317,47 @@ describe('Integration Tests', () => {
     await vi.advanceTimersByTimeAsync(1000);
     expect(query.isError).toBe(false);
     expect(handleErrorFn).toBeCalledTimes(1);
+  });
+
+  it('should handle returned error correctly', async ({ onTestFinished }) => {
+    onTestFinished(() => {
+      // if the event was never called during the test,
+      // make sure it's removed before the next test starts
+      process.removeAllListeners('unhandledrejection');
+    });
+
+    // disable Vitest's rejection handle
+    process.on('unhandledRejection', () => {
+      // your own handler
+    });
+    const handleErrorFn = vi.fn();
+    const handleErrorOnInstanceFn = vi
+      .fn(() => false as false | string)
+      .mockReturnValueOnce('instance error');
+    const wrapper = createWrapper({
+      onError: handleErrorFn,
+    });
+    const queryFn = vi.fn(() => 'data').mockRejectedValue('first call');
+
+    const query = wrapper.run(() => {
+      return createQuery({
+        queryKey: () => 'test',
+        queryFn,
+        retry: 0,
+        onError: handleErrorOnInstanceFn,
+      });
+    });
+    await vi.advanceTimersByTimeAsync(8000);
+    expect(query.isError).toBe(true);
+    expect(queryFn).toBeCalledTimes(1);
+    expect(handleErrorFn).toBeCalledTimes(1);
+    expect(handleErrorOnInstanceFn).toBeCalledTimes(1);
+    expect(handleErrorFn).toBeCalledWith('instance error', expect.any(Object));
+
+    query.refetch();
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(query.isError).toBe(true);
+    expect(handleErrorFn).toBeCalledTimes(1);
+    expect(handleErrorOnInstanceFn).toBeCalledTimes(2);
   });
 });
