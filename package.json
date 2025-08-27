@@ -10,14 +10,13 @@
   "scripts": {
     "build": "tsup",
     "dev": "vite",
-    "test": "vitest",
-    "test:run": "vitest --run",
+    "test": "vitest run",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
     "lint": "npx ultracite lint",
     "lint:fix": "npx ultracite format",
     "type-check": "tsc --noEmit --skipLibCheck",
-    "release": "pnpm lint:fix && pnpm test:run &&commit-and-tag-version -i CHANGELOG.md --same-file",
+    "release": "pnpm lint:fix && pnpm test && commit-and-tag-version -i CHANGELOG.md --same-file",
     "pub": "pnpm build && pnpm publish",
     "prepare": "husky"
   },
@@ -48,6 +47,6 @@
   "license": "ISC",
   "packageManager": "pnpm@10.12.1",
   "dependencies": {
-    "solid-tiny-context": "0.1.2"
+    "solid-tiny-context": "^0.1.4"
   }
 }

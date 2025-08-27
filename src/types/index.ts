@@ -37,6 +37,7 @@ export type QueryOptions<T> = {
   placeholderData?: T;
   enabled?: Accessor<boolean>;
   retry?: number;
+  onError?: (error: unknown) => void;
 };
 
 export type InitialedQueryOptions<T> = Omit<QueryOptions<T>, 'initialData'> & {

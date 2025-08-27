@@ -100,6 +100,7 @@ export function createQuery<T>(
         return await performFetch(id, tempKey, attempt + 1, maxRetry);
       }
 
+      opts.onError?.(error);
       setIsError(true);
       throw error;
     }

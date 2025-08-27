@@ -204,4 +204,38 @@ describe('Integration Tests', () => {
     expect(queryFn).toBeCalledTimes(2);
     expect(query.data).toBe('data');
   });
+
+  it('should trigger onError is exist', async ({ onTestFinished }) => {
+    onTestFinished(() => {
+      // if the event was never called during the test,
+      // make sure it's removed before the next test starts
+      process.removeAllListeners('unhandledrejection');
+    });
+
+    // disable Vitest's rejection handle
+    process.on('unhandledRejection', () => {
+      // your own handler
+    });
+
+    const wrapper = createWrapper();
+    const queryFn = vi.fn(() => 'data').mockRejectedValueOnce('first call');
+    const handleErrorFn = vi.fn();
+    const query = wrapper.run(() => {
+      return createQuery({
+        queryKey: () => 'test',
+        queryFn,
+        retry: 0,
+        onError: handleErrorFn,
+      });
+    });
+    await vi.advanceTimersByTimeAsync(8000);
+    expect(query.isError).toBe(true);
+    expect(queryFn).toBeCalledTimes(1);
+    expect(handleErrorFn).toBeCalledTimes(1);
+
+    query.refetch();
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(query.isError).toBe(false);
+    expect(handleErrorFn).toBeCalledTimes(1);
+  });
 });
