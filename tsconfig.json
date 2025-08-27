@@ -16,11 +16,7 @@
     "declarationMap": true,
     "sourceMap": true,
     "outDir": "./dist",
-    "baseUrl": ".",
-    "paths": {
-      "utils": ["./src/utils"],
-      "types": ["./src/types"]
-    }
+    "baseUrl": "."
   },
   "include": ["src/**/*", "test/**/*"],
   "exclude": ["node_modules", "dist"]

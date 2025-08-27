@@ -5,19 +5,21 @@
   "main": "./dist/index.js",
   "type": "module",
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "tsup",
-    "dev": "vite",
+    "dev": "vite -c ./playground/vite.config.ts",
     "test": "vitest run",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
     "lint": "npx ultracite lint",
     "lint:fix": "npx ultracite format",
-    "type-check": "tsc --noEmit --skipLibCheck",
-    "release": "pnpm lint:fix && pnpm test && commit-and-tag-version -i CHANGELOG.md --same-file",
-    "pub": "pnpm build && pnpm publish",
+    "tc": "tsc --noEmit --skipLibCheck",
+    "bump": "bumpp --no-push",
+    "prepublish": "pnpm tc && pnpm lint && pnpm build",
     "prepare": "husky"
   },
   "peerDependencies": {
@@ -25,21 +27,19 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.1.2",
-    "@commitlint/cli": "^19.8.1",
-    "@commitlint/config-conventional": "^19.8.1",
     "@solidjs/router": "^0.15.3",
     "@solidjs/testing-library": "^0.8.10",
     "@vitest/ui": "^3.2.4",
-    "commit-and-tag-version": "^12.5.1",
+    "bumpp": "^10.2.3",
     "husky": "^9.1.7",
     "jsdom": "^26.1.0",
     "tsup": "^8.5.0",
-    "typescript": "^5.8.3",
+    "typescript": "^5.9.2",
     "ultracite": "5.1.2",
-    "unocss": "^66.3.3",
-    "vite": "^6.2.1",
-    "vite-plugin-solid": "^2.11.0",
-    "vite-plugin-solid-pages": "^0.3.1",
+    "unocss": "^66.4.2",
+    "vite": "^6.3.5",
+    "vite-plugin-solid": "^2.11.8",
+    "vite-plugin-solid-pages": "^0.3.5",
     "vitest": "^3.2.4"
   },
   "keywords": [],
@@ -47,6 +47,7 @@
   "license": "ISC",
   "packageManager": "pnpm@10.12.1",
   "dependencies": {
-    "solid-tiny-context": "^0.1.4"
+    "solid-tiny-context": "^0.1.5",
+    "solid-tiny-utils": "^0.6.0"
   }
 }

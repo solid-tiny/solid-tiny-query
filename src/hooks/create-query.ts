@@ -1,4 +1,5 @@
 import { createMemo, createSignal, onCleanup } from 'solid-js';
+import { createDebouncedWatch, createWatch } from 'solid-tiny-utils';
 import { queryContext } from '../client';
 import type {
   InitialedQueryOptions,
@@ -7,7 +8,7 @@ import type {
   QueryOptions,
   QueryResult,
 } from '../types';
-import { createWatch, debounce, isDef } from '../utils';
+import { isDef } from '../utils';
 import { delay, getRealQueryKey } from '../utils/query-utils';
 
 export function createQuery<T>(
@@ -146,7 +147,7 @@ export function createQuery<T>(
     }
   );
 
-  const debouncedKeyChange = debounce((keyValue: string) => {
+  const onKeyChange = (keyValue: string) => {
     const cachedValue = cacheValue();
 
     if (isDef(cachedValue)) {
@@ -161,9 +162,11 @@ export function createQuery<T>(
     if (staleTime > currentGcTime) {
       actions.setState('gcConf', keyValue, staleTime);
     }
-  }, 100);
+  };
 
-  createWatch(realKey, debouncedKeyChange);
+  createDebouncedWatch(realKey, onKeyChange, {
+    delay: 100,
+  });
 
   createWatch(cacheValue, (v) => {
     if (isDef(v) && v !== data() && !isLoading() && !isError()) {
