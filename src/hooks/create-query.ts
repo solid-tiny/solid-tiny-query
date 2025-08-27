@@ -1,4 +1,4 @@
-import { createMemo, createSignal } from 'solid-js';
+import { createMemo, createSignal, onCleanup } from 'solid-js';
 import { queryContext } from '../client';
 import type {
   InitialedQueryOptions,
@@ -21,6 +21,11 @@ export function createQuery<T>(
   opts: QueryOptions<T> | InitialedQueryOptions<T> | PlaceholderQueryOptions<T>
 ): QueryResult<T> | InitialedQueryResult<T> {
   const [state, actions, staticData] = queryContext.useContext();
+  let isCleanedUp = false;
+
+  onCleanup(() => {
+    isCleanedUp = true;
+  });
 
   const realKey = createMemo(() => {
     return getRealQueryKey(opts.queryKey());
@@ -83,9 +88,7 @@ export function createQuery<T>(
 
       if (tempKey === realKey()) {
         setData(() => result);
-        if (!initialized()) {
-          setInitialized(true);
-        }
+        setInitialized(true);
       }
 
       actions.setCache(tempKey, result);
@@ -95,7 +98,8 @@ export function createQuery<T>(
         return; // Ignore stale fetch
       }
 
-      if (attempt < maxRetry) {
+      // continue fetch if not cleaned up and still needs to retry
+      if (attempt < maxRetry && !isCleanedUp) {
         await delay(1400);
         return await performFetch(id, tempKey, attempt + 1, maxRetry);
       }

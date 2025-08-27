@@ -205,6 +205,46 @@ describe('Integration Tests', () => {
     expect(query.data).toBe('data');
   });
 
+  it('should handle retry correctly', async ({ onTestFinished }) => {
+    onTestFinished(() => {
+      // if the event was never called during the test,
+      // make sure it's removed before the next test starts
+      process.removeAllListeners('unhandledrejection');
+    });
+
+    // disable Vitest's rejection handle
+    process.on('unhandledRejection', () => {
+      // your own handler
+    });
+
+    const handleErrorFn = vi.fn();
+    const wrapper = createWrapper({
+      onError: handleErrorFn,
+    });
+    const queryFn = vi.fn().mockRejectedValue('error');
+    const query = wrapper.run(() => {
+      return createQuery({
+        queryKey: () => 'test',
+        queryFn,
+        retry: 2,
+      });
+    });
+
+    await vi.advanceTimersByTimeAsync(80_000);
+    expect(query.isError).toBe(true);
+    expect(queryFn).toBeCalledTimes(3);
+    expect(handleErrorFn).toBeCalledTimes(1);
+
+    // should stop retry when disposed
+    query.refetch();
+    expect(queryFn).toBeCalledTimes(4);
+    wrapper.dispose();
+    await vi.advanceTimersByTimeAsync(80_000);
+    expect(queryFn).toBeCalledTimes(4);
+    expect(handleErrorFn).toBeCalledTimes(2);
+    expect(query.isError).toBe(true);
+  });
+
   it('should trigger onError if is settled in hook', async ({
     onTestFinished,
   }) => {
