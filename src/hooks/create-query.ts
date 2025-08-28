@@ -120,7 +120,10 @@ export function createQuery<T>(
         }
       }
 
-      handleFetchError(error, tempKey);
+      if (!isCleanedUp) {
+        handleFetchError(error, tempKey);
+      }
+
       throw error;
     }
   };

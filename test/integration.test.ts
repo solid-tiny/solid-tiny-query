@@ -241,7 +241,7 @@ describe('Integration Tests', () => {
     wrapper.dispose();
     await vi.advanceTimersByTimeAsync(80_000);
     expect(queryFn).toBeCalledTimes(4);
-    expect(handleErrorFn).toBeCalledTimes(2);
+    expect(handleErrorFn).toBeCalledTimes(1);
     expect(query.isError).toBe(true);
   });
 
