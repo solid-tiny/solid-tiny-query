@@ -1,9 +1,8 @@
 # Solid Tiny Query
 
-![npm](https://img.shields.io/npm/v/solid-tiny-query) ![npm bundle size](https://img.shields.io/bundlephobia/minzip/solid-tiny-query) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://makeapullrequest.com)
-
-
 A lightweight, type-safe query library for SolidJS applications. Inspired by React Query but designed specifically for SolidJS with a minimal footprint.
+
+[![npm](https://img.shields.io/npm/v/solid-tiny-query)](https://www.npmjs.com/package/solid-tiny-query) ![npm bundle size](https://img.shields.io/bundlephobia/minzip/solid-tiny-query) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://makeapullrequest.com)
 
 ## Features
 
@@ -27,7 +26,7 @@ pnpm add solid-tiny-query
 ### 1. Set up the Query Client
 
 ```tsx
-import { createQueryClient } from 'solid-tiny-query';
+import { createQueryClient } from "solid-tiny-query";
 
 // Create a query client with optional configuration
 const queryClient = createQueryClient({
@@ -47,19 +46,19 @@ function App() {
 ### 2. Use Queries
 
 ```tsx
-import { createQuery } from 'solid-tiny-query';
-import { createSignal, Show } from 'solid-js';
+import { createQuery } from "solid-tiny-query";
+import { createSignal, Show } from "solid-js";
 
 function UserProfile() {
-  const [userId, setUserId] = createSignal('1');
-  
+  const [userId, setUserId] = createSignal("1");
+
   const userQuery = createQuery({
-    queryKey: () => ['user', userId()],
+    queryKey: () => ["user", userId()],
     queryFn: async ({ value, refetching }) => {
       // value: current cached data or undefined
       // refetching: boolean indicating if this is a refetch
       const response = await fetch(`/api/users/${userId()}`);
-      if (!response.ok) throw new Error('Failed to fetch user');
+      if (!response.ok) throw new Error("Failed to fetch user");
       return response.json();
     },
     staleTime: 30000, // Data is fresh for 30 seconds
@@ -72,25 +71,21 @@ function UserProfile() {
       <Show when={userQuery.isLoading}>
         <div>Loading user data...</div>
       </Show>
-      
+
       <Show when={userQuery.isError}>
         <div>Error loading user data. Please try again.</div>
       </Show>
-      
+
       <Show when={userQuery.data}>
         <div>
           <h1>{userQuery.data.name}</h1>
           <p>{userQuery.data.email}</p>
         </div>
       </Show>
-      
-      <button onClick={() => userQuery.refetch()}>
-        Refresh User Data
-      </button>
-      
-      <button onClick={() => userQuery.clearCache()}>
-        Clear Cache
-      </button>
+
+      <button onClick={() => userQuery.refetch()}>Refresh User Data</button>
+
+      <button onClick={() => userQuery.clearCache()}>Clear Cache</button>
     </div>
   );
 }
@@ -113,6 +108,7 @@ Creates a new query client context with automatic garbage collection.
 Creates a reactive query with automatic caching and background updates.
 
 **Options:**
+
 - `queryKey: () => QueryKey | QueryKeys | (QueryKey | QueryKeys)[]` - Reactive function returning unique key(s) for the query
 - `queryFn: (info: QueryFnInfo<T>) => T | Promise<T>` - Function that fetches and returns data
   - `info.value` - Current cached data or undefined
@@ -125,6 +121,7 @@ Creates a reactive query with automatic caching and background updates.
 - `retry?: number` - Number of retry attempts on failure (default: 2)
 
 **Returns:**
+
 - `data: T | undefined` - The query data (T if initialData provided)
 - `isLoading: boolean` - Loading state during active fetch
 - `isError: boolean` - Error state if query failed
@@ -142,13 +139,13 @@ Hook to access the query client state and actions from context.
 ### Basic Usage
 
 ```tsx
-import { createQuery } from 'solid-tiny-query';
+import { createQuery } from "solid-tiny-query";
 
 const todosQuery = createQuery({
-  queryKey: () => ['todos'],
+  queryKey: () => ["todos"],
   queryFn: async () => {
-    const response = await fetch('/api/todos');
-    if (!response.ok) throw new Error('Failed to fetch todos');
+    const response = await fetch("/api/todos");
+    if (!response.ok) throw new Error("Failed to fetch todos");
     return response.json();
   },
   staleTime: 60000, // Fresh for 1 minute
@@ -158,10 +155,10 @@ const todosQuery = createQuery({
 ### With Initial Data
 
 ```tsx
-import { createQuery } from 'solid-tiny-query';
+import { createQuery } from "solid-tiny-query";
 
 const productQuery = createQuery({
-  queryKey: () => ['product', productId()],
+  queryKey: () => ["product", productId()],
   queryFn: async () => {
     const response = await fetch(`/api/products/${productId()}`);
     return response.json();
@@ -174,12 +171,12 @@ const productQuery = createQuery({
 ### With Placeholder Data
 
 ```tsx
-import { createQuery } from 'solid-tiny-query';
+import { createQuery } from "solid-tiny-query";
 
 const userQuery = createQuery({
-  queryKey: () => ['user', userId()],
+  queryKey: () => ["user", userId()],
   queryFn: async () => fetchUser(userId()),
-  placeholderData: { name: 'Loading...', email: '' }, // Shown during first fetch
+  placeholderData: { name: "Loading...", email: "" }, // Shown during first fetch
   staleTime: 300000, // Fresh for 5 minutes
 });
 ```
@@ -187,20 +184,20 @@ const userQuery = createQuery({
 ### Dependent/Conditional Queries
 
 ```tsx
-import { createQuery } from 'solid-tiny-query';
-import { createSignal } from 'solid-js';
+import { createQuery } from "solid-tiny-query";
+import { createSignal } from "solid-js";
 
 function UserPosts() {
   const [userId, setUserId] = createSignal<string | null>(null);
-  
+
   const userQuery = createQuery({
-    queryKey: () => ['user', userId()],
+    queryKey: () => ["user", userId()],
     queryFn: () => fetchUser(userId()!),
     enabled: () => Boolean(userId()), // Only runs when userId exists
   });
 
   const postsQuery = createQuery({
-    queryKey: () => ['posts', userId()],
+    queryKey: () => ["posts", userId()],
     queryFn: () => fetchUserPosts(userId()!),
     enabled: () => Boolean(userQuery.data), // Only runs when user data loaded
     staleTime: 120000, // Fresh for 2 minutes
@@ -208,8 +205,8 @@ function UserPosts() {
 
   return (
     <div>
-      <input 
-        type="text" 
+      <input
+        type="text"
         placeholder="Enter user ID"
         onInput={(e) => setUserId(e.target.value || null)}
       />
@@ -224,15 +221,15 @@ function UserPosts() {
 ### Dynamic Query Keys
 
 ```tsx
-import { createQuery } from 'solid-tiny-query';
-import { createSignal } from 'solid-js';
+import { createQuery } from "solid-tiny-query";
+import { createSignal } from "solid-js";
 
 function SearchResults() {
-  const [searchTerm, setSearchTerm] = createSignal('');
-  const [filters, setFilters] = createSignal({ category: 'all' });
-  
+  const [searchTerm, setSearchTerm] = createSignal("");
+  const [filters, setFilters] = createSignal({ category: "all" });
+
   const searchQuery = createQuery({
-    queryKey: () => ['search', searchTerm(), filters()], // Reactive key
+    queryKey: () => ["search", searchTerm(), filters()], // Reactive key
     queryFn: async () => {
       const params = new URLSearchParams({
         q: searchTerm(),
@@ -248,7 +245,7 @@ function SearchResults() {
 
   return (
     <div>
-      <input 
+      <input
         type="text"
         value={searchTerm()}
         onInput={(e) => setSearchTerm(e.target.value)}
@@ -266,30 +263,35 @@ function SearchResults() {
 ## Best Practices
 
 1. **Handle loading and error states gracefully**: Always provide user feedback
+
    ```tsx
    // ✅ Good - comprehensive state handling
-   <Show when={query.isLoading} fallback={
-     <Show when={query.isError} fallback={
-       <div>{query.data.content}</div>
-     }>
-       <ErrorMessage onRetry={() => query.refetch()} />
-     </Show>
-   }>
+   <Show
+     when={query.isLoading}
+     fallback={
+       <Show when={query.isError} fallback={<div>{query.data.content}</div>}>
+         <ErrorMessage onRetry={() => query.refetch()} />
+       </Show>
+     }
+   >
      <LoadingSpinner />
    </Show>
    ```
 
 2. **Set appropriate stale times**: Balance data freshness with performance
+
    - User profiles: 300000ms (5 minutes)
-   - Search results: 30000ms (30 seconds)  
+   - Search results: 30000ms (30 seconds)
    - Real-time data: 0ms (always fresh)
 
 3. **Use conditional queries effectively**: Enable queries based on dependencies
+
    ```tsx
-   enabled: () => Boolean(userId() && userPermissions().canViewPosts)
+   enabled: () => Boolean(userId() && userPermissions().canViewPosts);
    ```
 
 4. **Optimize query functions**: Include current data for optimistic updates
+
    ```tsx
    queryFn: async ({ value, refetching }) => {
      if (refetching && value) {
@@ -297,10 +299,11 @@ function SearchResults() {
        showOptimisticUpdate(value);
      }
      return await fetchData();
-   }
+   };
    ```
 
 5. **Clean up when needed**: Use `clearCache()` to remove stale data
+
    ```tsx
    doApiUpdateData().then(() => {
      // Clear cache after successful update
@@ -309,31 +312,38 @@ function SearchResults() {
    ```
 
 6. **Leverage TypeScript**: Use proper typing for better DX and error prevention
+
    ```tsx
-   interface User { id: string; name: string; }
+   interface User {
+     id: string;
+     name: string;
+   }
    
    const userQuery = createQuery<User>({
-     queryKey: () => ['user', userId()],
+     queryKey: () => ["user", userId()],
      queryFn: async (): Promise<User> => {
        // TypeScript will enforce return type
        return await fetchUser(userId());
-     }
+     },
    });
    ```
 
 ## Key Features
 
 ### Automatic Cache Management
+
 - **Stale-while-revalidate**: Serve cached data instantly while refetching in background
 - **Intelligent garbage collection**: Automatically clean up unused cache entries
 - **Debounced key changes**: Prevent excessive refetches when query keys change rapidly
 
 ### Type Safety
+
 - **Full TypeScript support**: Get complete type inference and safety
 - **Overloaded signatures**: Different return types based on `initialData` and `placeholderData`
 - **Generic query functions**: Type-safe query functions with proper error handling
 
 ### Performance Optimizations
+
 - **Request deduplication**: Multiple components using the same query share results
 - **Background refetching**: Keep data fresh without blocking UI
 - **Conditional execution**: Only run queries when enabled and dependencies are met
@@ -344,12 +354,11 @@ function SearchResults() {
 
 According to the debounced key change logic, the initial fetch didn't trigger until the first stable key was established. This prevents unnecessary requests when the query key is still being set up. The delay time is 100ms.
 
-
 ## Migration Notes
 
 This library is designed as a lightweight alternative to React Query for SolidJS applications. Key differences:
 
 - Uses SolidJS reactivity instead of React's re-rendering model
-- Smaller bundle size with zero configuration required  
+- Smaller bundle size with zero configuration required
 - Built-in automatic garbage collection
 - Simplified API focused on common use cases

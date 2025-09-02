@@ -1,7 +1,23 @@
 {
   "name": "solid-tiny-query",
   "version": "0.4.1",
-  "description": "",
+  "description": "A tiny and fast data fetching library for SolidJS.",
+  "author": "gmero",
+  "license": "MIT",
+  "packageManager": "pnpm@10.12.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/solid-tiny/solid-tiny-query"
+  },
+  "homepage": "https://github.com/solid-tiny/solid-tiny-query#readme",
+  "keywords": [
+    "solid",
+    "tiny",
+    "query",
+    "data-fetching",
+    "fetch",
+    "cache"
+  ],
   "main": "./dist/index.js",
   "type": "module",
   "files": [
@@ -42,10 +58,6 @@
     "vite-plugin-solid-pages": "^0.3.5",
     "vitest": "^3.2.4"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "packageManager": "pnpm@10.12.1",
   "dependencies": {
     "solid-tiny-context": "^0.1.5",
     "solid-tiny-utils": "^0.6.0"
