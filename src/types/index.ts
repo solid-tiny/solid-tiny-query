@@ -1,7 +1,7 @@
 import type { Accessor } from 'solid-js';
 import type { Maybe } from '../utils';
 
-export type QueryKey = string | number | undefined | null;
+export type QueryKey = string | number | undefined | null | object;
 export type QueryKeys = QueryKey[];
 
 export type QueryFn<T> = (info: QueryFnInfo<T>) => T | Promise<T>;

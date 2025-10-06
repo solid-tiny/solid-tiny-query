@@ -1,6 +1,10 @@
+import { isObject } from 'solid-tiny-utils';
 import type { QueryKey, QueryKeys } from '../types';
 
 function parseKey(key: QueryKey) {
+  if (isObject(key)) {
+    return JSON.stringify(key);
+  }
   return `${key}`;
 }
 

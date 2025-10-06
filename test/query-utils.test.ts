@@ -11,6 +11,12 @@ describe('Query Utils', () => {
       expect(getRealQueryKey(123)).toBe('123');
     });
 
+    it('should convert object key to string', () => {
+      expect(getRealQueryKey({ id: 1, name: 'test' })).toBe(
+        '{"id":1,"name":"test"}'
+      );
+    });
+
     it('should convert array of keys to sorted joined string', () => {
       expect(getRealQueryKey(['user', 'profile'])).toBe('profileuser');
       expect(getRealQueryKey([1, 2, 3])).toBe('123');
