@@ -12,11 +12,11 @@ importers:
         specifier: ^1.9.7
         version: 1.9.9
       solid-tiny-context:
-        specifier: ^0.1.5
-        version: 0.1.5(solid-js@1.9.9)
+        specifier: ^0.2.3
+        version: 0.2.3(solid-js@1.9.9)
       solid-tiny-utils:
-        specifier: ^0.6.0
-        version: 0.6.0(solid-js@1.9.9)
+        specifier: ^0.7.1
+        version: 0.7.1(solid-js@1.9.9)
     devDependencies:
       '@biomejs/biome':
         specifier: 2.1.2
@@ -1542,13 +1542,18 @@ packages:
     peerDependencies:
       solid-js: ^1.9.7
 
-  solid-tiny-context@0.1.5:
-    resolution: {integrity: sha512-ycaWcUUYYFWX2QQRrUfY4cPB7ASpmEewxNXhTpU6YT/SkgfmhVMIo/ANDgvLF6f10hltrW8ldoOSXxkLH38jJA==}
+  solid-tiny-context@0.2.3:
+    resolution: {integrity: sha512-sW2ETgQVh4kEHAgnN+ixYT4rL2O4zFQZw6W8k3JucLf1zMk+WNGc/fmOOpthUeOIXuU0Y2pLk0dosSr4ZeZHpg==}
     peerDependencies:
       solid-js: ^1.9.7
 
   solid-tiny-utils@0.6.0:
     resolution: {integrity: sha512-oICNEwCrmlt3ywRTgHm71tNrkCvQKoiWteRzUe8elaro93BXI+6Twb9HhxLPeke1FrcLMxrjhBalxZWhqDW5KA==}
+    peerDependencies:
+      solid-js: ^1.9.7
+
+  solid-tiny-utils@0.7.1:
+    resolution: {integrity: sha512-Z+Uw+TZXycHdzKHJzLI3n0cKhLuqB9XzJMRq/Y1gVq5M5r5OkQODHKSQx+FDYhPGvN1b5VAEz3PQv8XobSlt0A==}
     peerDependencies:
       solid-js: ^1.9.7
 
@@ -3370,7 +3375,7 @@ snapshots:
     dependencies:
       solid-js: 1.9.9
 
-  solid-tiny-context@0.1.5(solid-js@1.9.9):
+  solid-tiny-context@0.2.3(solid-js@1.9.9):
     dependencies:
       solid-js: 1.9.9
       solid-tiny-utils: 0.6.0(solid-js@1.9.9)
@@ -3379,6 +3384,11 @@ snapshots:
     dependencies:
       solid-js: 1.9.9
       solid-tiny-context: 0.1.2(solid-js@1.9.9)
+
+  solid-tiny-utils@0.7.1(solid-js@1.9.9):
+    dependencies:
+      solid-js: 1.9.9
+      solid-tiny-context: 0.2.3(solid-js@1.9.9)
 
   source-map-js@1.2.1: {}
 

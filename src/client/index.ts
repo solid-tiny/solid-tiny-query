@@ -14,6 +14,8 @@ export const queryContext = createComponentState({
     cache: {} as Record<string, CacheEntry>,
     gcConf: {} as Record<string, number>,
     defaultStaleTime: 0,
+    defaultRetry: 3,
+    defaultRetryDelay: 1500,
   }),
   methods: {
     /**
@@ -108,6 +110,8 @@ export const queryContext = createComponentState({
 export function createQueryClient(opts?: QueryClientOptions) {
   const Context = queryContext.initial({
     defaultStaleTime: () => opts?.defaultStaleTime,
+    defaultRetry: () => opts?.defaultRetry,
+    defaultRetryDelay: () => opts?.defaultRetryDelay,
   });
 
   const [, actions, staticData] = Context.value;

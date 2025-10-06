@@ -245,6 +245,38 @@ describe('Integration Tests', () => {
     expect(query.isError).toBe(true);
   });
 
+  it('should handle retry delay correctly', async ({ onTestFinished }) => {
+    onTestFinished(() => {
+      // if the event was never called during the test,
+      // make sure it's removed before the next test starts
+      process.removeAllListeners('unhandledrejection');
+    });
+
+    // disable Vitest's rejection handle
+    process.on('unhandledRejection', () => {
+      // your own handler
+    });
+
+    const handleErrorFn = vi.fn();
+    const wrapper = createWrapper({
+      onError: handleErrorFn,
+    });
+    const queryFn = vi.fn().mockRejectedValue('error');
+    const query = wrapper.run(() => {
+      return createQuery({
+        queryKey: () => 'test',
+        queryFn,
+        retry: 2,
+        retryDelay: 10,
+      });
+    });
+
+    await vi.advanceTimersByTimeAsync(200);
+    expect(query.isError).toBe(true);
+    expect(queryFn).toBeCalledTimes(3);
+    expect(handleErrorFn).toBeCalledTimes(1);
+  });
+
   it('should trigger onError if is settled in hook', async ({
     onTestFinished,
   }) => {

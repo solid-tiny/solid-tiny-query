@@ -170,5 +170,38 @@ describe('createQuery', () => {
       expect(queryFn2).toBeCalledTimes(1);
       expect(actions.getCache('test', -1)).toBe('data2');
     });
+
+    it('should create a query with retry option', async ({
+      onTestFinished,
+    }) => {
+      onTestFinished(() => {
+        // if the event was never called during the test,
+        // make sure it's removed before the next test starts
+        process.removeAllListeners('unhandledrejection');
+      });
+
+      // disable Vitest's rejection handle
+      process.on('unhandledRejection', () => {
+        // your own handler
+      });
+
+      const wrapper = createWrapper({
+        defaultRetry: 2,
+        defaultRetryDelay: 10,
+      });
+
+      const queryFn = vi.fn().mockRejectedValue(new Error('error'));
+
+      const query = wrapper.run(() => {
+        return createQuery({
+          queryKey: () => 'test',
+          queryFn,
+        });
+      });
+
+      await vi.advanceTimersByTimeAsync(200);
+      expect(query.isError).toBe(true);
+      expect(queryFn).toBeCalledTimes(3);
+    });
   });
 });

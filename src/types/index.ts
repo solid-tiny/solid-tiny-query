@@ -37,7 +37,17 @@ export type QueryOptions<T> = {
    */
   placeholderData?: T;
   enabled?: Accessor<boolean>;
+  /**
+   * Number of retry attempts upon query failure
+   * @default 3
+   */
   retry?: number;
+  /**
+   * Retry delay in milliseconds between each retry attempt
+   *
+   * @default 1500
+   */
+  retryDelay?: number;
   onError?: (error: unknown) => Maybe<Error | string | false>;
 };
 
@@ -66,6 +76,8 @@ export type InitialedQueryResult<T> = Omit<QueryResult<T>, 'data'> & {
 
 export type QueryClientOptions = {
   defaultStaleTime?: number;
+  defaultRetry?: number;
+  defaultRetryDelay?: number;
   onError?: (
     error: unknown,
     info: {

@@ -88,7 +88,8 @@ export function createQuery<T>(
     id: number,
     tempKey: string,
     attempt: number,
-    maxRetry: number
+    maxRetry: number,
+    retryDelay: number
     // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: I tried, I failed
   ): Promise<void> => {
     try {
@@ -114,9 +115,15 @@ export function createQuery<T>(
       }
 
       if (attempt < maxRetry) {
-        await sleep(1400);
+        await sleep(retryDelay);
         if (!isCleanedUp) {
-          return await performFetch(id, tempKey, attempt + 1, maxRetry);
+          return await performFetch(
+            id,
+            tempKey,
+            attempt + 1,
+            maxRetry,
+            retryDelay
+          );
         }
       }
 
@@ -137,10 +144,11 @@ export function createQuery<T>(
 
     const id = Date.now();
     latestFetchId = id;
-    const maxRetry = opts.retry ?? 2;
+    const maxRetry = opts.retry ?? state.defaultRetry;
+    const retryDelay = opts.retryDelay ?? state.defaultRetryDelay;
 
     try {
-      await performFetch(id, realKey(), 0, maxRetry);
+      await performFetch(id, realKey(), 0, maxRetry, retryDelay);
     } finally {
       if (latestFetchId === id) {
         setIsLoading(false);
