@@ -1,6 +1,6 @@
 {
   "name": "solid-tiny-query",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "A tiny and fast data fetching library for SolidJS.",
   "author": "gmero",
   "license": "MIT",
